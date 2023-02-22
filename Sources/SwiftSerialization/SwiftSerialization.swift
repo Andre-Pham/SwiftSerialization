@@ -2,7 +2,7 @@
 /// Test
 extension String {
     
-    func printDesc() {
+    public func printDesc() {
         print(self)
     }
     
