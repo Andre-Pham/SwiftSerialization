@@ -7,6 +7,8 @@
 
 import Foundation
 
+/// A database target that uses the FileManager to save data. Records are written as files.
+/// The SQLiteDatabase target has approximately 98% faster deletes, 35% faster writes, and about the same read speed. Only use this if you really want to use files.
 public class FileDatabase: DatabaseTarget {
     
     private let directoryURL = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]

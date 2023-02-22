@@ -7,6 +7,7 @@
 
 import Foundation
 
+/// Refer to README.md for usage examples.
 public protocol Storable {
     
     func toDataObject() -> DataObject

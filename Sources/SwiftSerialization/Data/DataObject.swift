@@ -9,7 +9,7 @@ import Foundation
 import SwiftyJSON
 import SwiftUI
 
-/// Refer to DummyClasses.swift for usage example.
+/// Refer to README.md for usage examples.
 public class DataObject {
     
     // MARK: - Properties

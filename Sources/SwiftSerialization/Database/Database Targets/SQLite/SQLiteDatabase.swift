@@ -8,6 +8,8 @@
 import Foundation
 import SQLite3
 
+/// A database target that uses the SQLite3 to save data.
+/// Currently the fastest target.
 public class SQLiteDatabase: DatabaseTarget {
     
     /// The directory the sqlite file is saved to
