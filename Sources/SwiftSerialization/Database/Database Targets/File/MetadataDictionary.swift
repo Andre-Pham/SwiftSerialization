@@ -1,13 +1,13 @@
 //
 //  MetadataDictionary.swift
-//  yonder
+//  SwiftSerialization
 //
 //  Created by Andre Pham on 3/1/2023.
 //
 
 import Foundation
 
-class MetadataDictionary: Storable {
+internal class MetadataDictionary: Storable {
     
     private(set) var metadataDictionary = [String: Metadata]()
     

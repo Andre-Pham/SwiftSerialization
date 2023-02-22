@@ -1,6 +1,6 @@
 //
 //  FileDatabase.swift
-//  yonder
+//  SwiftSerialization
 //
 //  Created by Andre Pham on 3/1/2023.
 //
@@ -11,6 +11,8 @@ public class FileDatabase: DatabaseTarget {
     
     private let directoryURL = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
     private let metadataFilePath = "metadata"
+    
+    public init() { }
     
     private func createURL(path: String) -> URL {
         return URL(fileURLWithPath: path, relativeTo: self.directoryURL).appendingPathExtension("json")

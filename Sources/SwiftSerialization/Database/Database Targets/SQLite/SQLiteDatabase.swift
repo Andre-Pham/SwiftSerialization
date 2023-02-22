@@ -1,6 +1,6 @@
 //
 //  SQLiteDatabase.swift
-//  yonder
+//  SwiftSerialization
 //
 //  Created by Andre Pham on 5/1/2023.
 //

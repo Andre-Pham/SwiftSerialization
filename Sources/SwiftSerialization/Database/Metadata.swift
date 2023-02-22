@@ -1,13 +1,13 @@
 //
 //  Metadata.swift
-//  yonder
+//  SwiftSerialization
 //
 //  Created by Andre Pham on 3/1/2023.
 //
 
 import Foundation
 
-class Metadata: Storable {
+internal class Metadata: Storable {
     
     internal let id: String
     internal let objectName: String
