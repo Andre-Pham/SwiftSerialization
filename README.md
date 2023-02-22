@@ -268,10 +268,12 @@ class Person: Storable {
 }
 ```
 
-If you refactor `name` to `firstName`, and `Person` to `Human`, the result should look as such below. Basically:
+The rules to follow are basically:
 
 * For class name refactors, call `Legacy.addClassRefactor` with the new name.
 * For property name refactors, assuming you change the `Field` case, include the `legacyKeys` parameter in the `.get` method call for that property.
+
+If you refactor `Person` to `Human`, and `name` to `firstName`, the result should look as such:
 
 ```swift
 // On application startup
