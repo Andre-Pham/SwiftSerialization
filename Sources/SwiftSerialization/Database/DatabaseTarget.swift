@@ -7,7 +7,7 @@
 
 import Foundation
 
-protocol DatabaseTarget {
+public protocol DatabaseTarget {
     
     /// Write a record to the database. If the id already exists, replace it.
     /// - Parameters:
