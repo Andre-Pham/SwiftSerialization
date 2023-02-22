@@ -62,8 +62,12 @@ public class FileDatabase: DatabaseTarget {
     /// - Returns: All saved objects of the specified type
     public func read<T: Storable>() -> [T] {
         var result = [T]()
-        let objectName = String(describing: T.self)
-        let ids = self.readMetadataDictionary().getFilteredIDs({ $0.objectName == objectName })
+        let currentObjectName = String(describing: T.self)
+        let legacyObjectNames = Legacy.oldClassNames[currentObjectName]
+        let allObjectNames = (legacyObjectNames ?? [String]()) + [currentObjectName]
+        let ids = self.readMetadataDictionary().getFilteredIDs({ metadata in
+            allObjectNames.contains(where: { $0 == metadata.objectName })
+        })
         for url in ids.map({ self.createURL(path: $0) }) {
             if let data = try? Data(contentsOf: url) {
                 let dataObject = DataObject(data: data)

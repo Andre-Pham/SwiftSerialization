@@ -14,8 +14,6 @@ public class DataObject {
     
     // MARK: - Properties
     
-    /// NOT IMPLEMENTED YET - A dictionary of class names that may be stored and have been since refactored to a new name
-    private static let legacyClassNames: [String: String] = [:]
     /// The JSON key that corresponds to the object name of the data object
     private let objectField = "object"
     /// The name of the object (class) this instance represents (the value to objectField)
@@ -228,108 +226,176 @@ public class DataObject {
     
     // MARK: - Data retrieval methods
     
-    public func get(_ key: String, onFail: String = "") -> String {
-        let retrieval = self.json[key].string
+    public func get(_ key: String, onFail: String = "", legacyKeys: [String] = []) -> String {
+        var retrieval = self.json[key].string
+        for legacyKey in legacyKeys {
+            guard retrieval == nil else { break }
+            retrieval = self.json[legacyKey].string
+        }
         assert(retrieval != nil, "Failed to restore attribute '\(key)' to object '\(self.objectName)'")
         return retrieval ?? onFail
     }
     
-    public func get(_ key: String) -> String? {
-        return self.json[key].string
+    public func get(_ key: String, legacyKeys: [String] = []) -> String? {
+        var retrieval = self.json[key].string
+        for legacyKey in legacyKeys {
+            guard retrieval == nil else { break }
+            retrieval = self.json[legacyKey].string
+        }
+        return retrieval
     }
     
-    public func get(_ key: String) -> [String] {
-        let array = self.json[key].array
-        assert(array != nil, "Failed to restore attribute '\(key)' to object '\(self.objectName)'")
-        let valueArray = (array ?? []).map { $0.stringValue }
-        assert(array?.count == valueArray.count, "JSON array came with \(array?.count ?? -1) elements, but only \(valueArray.count) could be restored")
-        return valueArray
+    public func get(_ key: String, legacyKeys: [String] = []) -> [String] {
+        var retrieval = self.json[key].array
+        for legacyKey in legacyKeys {
+            guard retrieval == nil else { break }
+            retrieval = self.json[legacyKey].array
+        }
+        assert(retrieval != nil, "Failed to restore attribute '\(key)' to object '\(self.objectName)'")
+        let result = (retrieval ?? []).compactMap({ $0.string })
+        assert(retrieval?.count == result.count, "JSON array came with \(retrieval?.count ?? -1) elements, but only \(result.count) could be restored")
+        return result
     }
     
-    public func get(_ key: String) -> [String?] {
-        let array = self.json[key].array
-        assert(array != nil, "Failed to restore attribute '\(key)' to object '\(self.objectName)'")
-        let valueArray = (array ?? []).map { $0.string }
-        return valueArray
+    public func get(_ key: String, legacyKeys: [String] = []) -> [String?] {
+        var retrieval = self.json[key].array
+        for legacyKey in legacyKeys {
+            guard retrieval == nil else { break }
+            retrieval = self.json[legacyKey].array
+        }
+        assert(retrieval != nil, "Failed to restore attribute '\(key)' to object '\(self.objectName)'")
+        let result = (retrieval ?? []).map({ $0.string })
+        return result
     }
     
-    public func get(_ key: String, onFail: Int = 0) -> Int {
-        let retrieval = self.json[key].int
+    public func get(_ key: String, onFail: Int = 0, legacyKeys: [String] = []) -> Int {
+        var retrieval = self.json[key].int
+        for legacyKey in legacyKeys {
+            guard retrieval == nil else { break }
+            retrieval = self.json[legacyKey].int
+        }
         assert(retrieval != nil, "Failed to restore attribute '\(key)' to object '\(self.objectName)'")
         return retrieval ?? onFail
     }
     
-    public func get(_ key: String) -> Int? {
-        return self.json[key].int
+    public func get(_ key: String, legacyKeys: [String] = []) -> Int? {
+        var retrieval = self.json[key].int
+        for legacyKey in legacyKeys {
+            guard retrieval == nil else { break }
+            retrieval = self.json[legacyKey].int
+        }
+        return retrieval
     }
     
-    public func get(_ key: String) -> [Int] {
-        let array = self.json[key].array
-        assert(array != nil, "Failed to restore attribute '\(key)' to object '\(self.objectName)'")
-        let valueArray = (array ?? []).map { $0.intValue }
-        assert(array?.count == valueArray.count, "JSON array came with \(array?.count ?? -1) elements, but only \(valueArray.count) could be restored")
-        return valueArray
+    public func get(_ key: String, legacyKeys: [String] = []) -> [Int] {
+        var retrieval = self.json[key].array
+        for legacyKey in legacyKeys {
+            guard retrieval == nil else { break }
+            retrieval = self.json[legacyKey].array
+        }
+        assert(retrieval != nil, "Failed to restore attribute '\(key)' to object '\(self.objectName)'")
+        let result = (retrieval ?? []).compactMap({ $0.int })
+        assert(retrieval?.count == result.count, "JSON array came with \(retrieval?.count ?? -1) elements, but only \(result.count) could be restored")
+        return result
     }
     
-    public func get(_ key: String) -> [Int?] {
-        let array = self.json[key].array
-        assert(array != nil, "Failed to restore attribute '\(key)' to object '\(self.objectName)'")
-        let valueArray = (array ?? []).map { $0.int }
-        return valueArray
+    public func get(_ key: String, legacyKeys: [String] = []) -> [Int?] {
+        var retrieval = self.json[key].array
+        for legacyKey in legacyKeys {
+            guard retrieval == nil else { break }
+            retrieval = self.json[legacyKey].array
+        }
+        assert(retrieval != nil, "Failed to restore attribute '\(key)' to object '\(self.objectName)'")
+        let result = (retrieval ?? []).map({ $0.int })
+        return result
     }
     
-    public func get(_ key: String, onFail: Double = 0.0) -> Double {
-        let retrieval = self.json[key].double
+    public func get(_ key: String, onFail: Double = 0.0, legacyKeys: [String] = []) -> Double {
+        var retrieval = self.json[key].double
+        for legacyKey in legacyKeys {
+            guard retrieval == nil else { break }
+            retrieval = self.json[legacyKey].double
+        }
         assert(retrieval != nil, "Failed to restore attribute '\(key)' to object '\(self.objectName)'")
         return retrieval ?? onFail
     }
     
-    public func get(_ key: String) -> Double? {
-        return self.json[key].double
+    public func get(_ key: String, legacyKeys: [String] = []) -> Double? {
+        var retrieval = self.json[key].double
+        for legacyKey in legacyKeys {
+            guard retrieval == nil else { break }
+            retrieval = self.json[legacyKey].double
+        }
+        return retrieval
     }
     
-    public func get(_ key: String) -> [Double] {
-        let array = self.json[key].array
-        assert(array != nil, "Failed to restore attribute '\(key)' to object '\(self.objectName)'")
-        let valueArray = (array ?? []).map { $0.doubleValue }
-        assert(array?.count == valueArray.count, "JSON array came with \(array?.count ?? -1) elements, but only \(valueArray.count) could be restored")
-        return valueArray
+    public func get(_ key: String, legacyKeys: [String] = []) -> [Double] {
+        var retrieval = self.json[key].array
+        for legacyKey in legacyKeys {
+            guard retrieval == nil else { break }
+            retrieval = self.json[legacyKey].array
+        }
+        assert(retrieval != nil, "Failed to restore attribute '\(key)' to object '\(self.objectName)'")
+        let result = (retrieval ?? []).compactMap({ $0.double })
+        assert(retrieval?.count == result.count, "JSON array came with \(retrieval?.count ?? -1) elements, but only \(result.count) could be restored")
+        return result
     }
     
-    public func get(_ key: String) -> [Double?] {
-        let array = self.json[key].array
-        assert(array != nil, "Failed to restore attribute '\(key)' to object '\(self.objectName)'")
-        let valueArray = (array ?? []).map { $0.double }
-        return valueArray
+    public func get(_ key: String, legacyKeys: [String] = []) -> [Double?] {
+        var retrieval = self.json[key].array
+        for legacyKey in legacyKeys {
+            guard retrieval == nil else { break }
+            retrieval = self.json[legacyKey].array
+        }
+        assert(retrieval != nil, "Failed to restore attribute '\(key)' to object '\(self.objectName)'")
+        let result = (retrieval ?? []).map({ $0.double })
+        return result
     }
     
-    public func get(_ key: String, onFail: Bool) -> Bool {
-        let retrieval = self.json[key].bool
+    public func get(_ key: String, onFail: Bool, legacyKeys: [String] = []) -> Bool {
+        var retrieval = self.json[key].bool
+        for legacyKey in legacyKeys {
+            guard retrieval == nil else { break }
+            retrieval = self.json[legacyKey].bool
+        }
         assert(retrieval != nil, "Failed to restore attribute '\(key)' to object '\(self.objectName)'")
         return retrieval ?? onFail
     }
     
-    public func get(_ key: String) -> Bool? {
-        return self.json[key].bool
+    public func get(_ key: String, legacyKeys: [String] = []) -> Bool? {
+        var retrieval = self.json[key].bool
+        for legacyKey in legacyKeys {
+            guard retrieval == nil else { break }
+            retrieval = self.json[legacyKey].bool
+        }
+        return retrieval
     }
     
-    public func get(_ key: String) -> [Bool] {
-        let array = self.json[key].array
-        assert(array != nil, "Failed to restore attribute '\(key)' to object '\(self.objectName)'")
-        let valueArray = (array ?? []).map { $0.boolValue }
-        assert(array?.count == valueArray.count, "JSON array came with \(array?.count ?? -1) elements, but only \(valueArray.count) could be restored")
-        return valueArray
+    public func get(_ key: String, legacyKeys: [String] = []) -> [Bool] {
+        var retrieval = self.json[key].array
+        for legacyKey in legacyKeys {
+            guard retrieval == nil else { break }
+            retrieval = self.json[legacyKey].array
+        }
+        assert(retrieval != nil, "Failed to restore attribute '\(key)' to object '\(self.objectName)'")
+        let result = (retrieval ?? []).compactMap({ $0.bool })
+        assert(retrieval?.count == result.count, "JSON array came with \(retrieval?.count ?? -1) elements, but only \(result.count) could be restored")
+        return result
     }
     
-    public func get(_ key: String) -> [Bool?] {
-        let array = self.json[key].array
-        assert(array != nil, "Failed to restore attribute '\(key)' to object '\(self.objectName)'")
-        let valueArray = (array ?? []).map { $0.bool }
-        return valueArray
+    public func get(_ key: String, legacyKeys: [String] = []) -> [Bool?] {
+        var retrieval = self.json[key].array
+        for legacyKey in legacyKeys {
+            guard retrieval == nil else { break }
+            retrieval = self.json[legacyKey].array
+        }
+        assert(retrieval != nil, "Failed to restore attribute '\(key)' to object '\(self.objectName)'")
+        let result = (retrieval ?? []).map({ $0.bool })
+        return result
     }
     
-    public func get(_ key: String, onFail: Date = Date()) -> Date {
-        let dateString: String = self.get(key, onFail: "")
+    public func get(_ key: String, onFail: Date = Date(), legacyKeys: [String] = []) -> Date {
+        let dateString: String = self.get(key, onFail: "", legacyKeys: legacyKeys)
         if dateString.isEmpty {
             assertionFailure("Failed to restore attribute '\(key)' to object \(self.objectName)")
             return onFail
@@ -339,52 +405,72 @@ public class DataObject {
         return date ?? onFail
     }
     
-    public func get(_ key: String) -> Date? {
-        let dateString: String? = self.get(key)
+    public func get(_ key: String, legacyKeys: [String] = []) -> Date? {
+        let dateString: String? = self.get(key, legacyKeys: legacyKeys)
         guard dateString != nil else {
             return nil
         }
         return self.dateFormatter.date(from: dateString!)
     }
     
-    public func get(_ key: String) -> [Date] {
-        let array = self.json[key].array
-        assert(array != nil, "Failed to restore attribute '\(key)' to object '\(self.objectName)'")
-        let stringArray = (array ?? []).map { $0.stringValue }
-        assert(array?.count == stringArray.count, "JSON array came with \(array?.count ?? -1) elements, but only \(stringArray.count) could be restored")
-        let valueArray = stringArray.compactMap({ self.dateFormatter.date(from: $0) })
-        assert(valueArray.count == stringArray.count, "JSON array came with \(stringArray.count) elements, but only \(valueArray.count) could be restored as dates")
-        return valueArray
+    public func get(_ key: String, legacyKeys: [String] = []) -> [Date] {
+        var retrieval = self.json[key].array
+        for legacyKey in legacyKeys {
+            guard retrieval == nil else { break }
+            retrieval = self.json[legacyKey].array
+        }
+        assert(retrieval != nil, "Failed to restore attribute '\(key)' to object '\(self.objectName)'")
+        let stringResult = (retrieval ?? []).compactMap({ $0.string })
+        let result = stringResult.compactMap({ self.dateFormatter.date(from: $0) })
+        assert(retrieval?.count == result.count, "JSON array came with \(retrieval?.count ?? -1) elements, but only \(result.count) could be restored")
+        return result
     }
     
-    public func get(_ key: String) -> [Date?] {
-        let array = self.json[key].array
-        assert(array != nil, "Failed to restore attribute '\(key)' to object '\(self.objectName)'")
-        let stringArray = (array ?? []).map { $0.string }
-        let valueArray = stringArray.map({
+    public func get(_ key: String, legacyKeys: [String] = []) -> [Date?] {
+        var retrieval = self.json[key].array
+        for legacyKey in legacyKeys {
+            guard retrieval == nil else { break }
+            retrieval = self.json[legacyKey].array
+        }
+        assert(retrieval != nil, "Failed to restore attribute '\(key)' to object '\(self.objectName)'")
+        let stringResult = (retrieval ?? []).map({ $0.string })
+        let result = stringResult.map({
             if let stringDate = $0 {
                 return self.dateFormatter.date(from: stringDate)
             } else {
                 return nil
             }
         })
-        return valueArray
+        return result
     }
     
-    public func getObject<T>(_ key: String, type: T.Type) -> T where T: Storable {
-        return DataObject(json: JSON(self.json[key].object)).restore(type)
+    public func getObject<T>(_ key: String, type: T.Type, legacyKeys: [String] = []) -> T where T: Storable {
+        var json = self.json[key]
+        for legacyKey in legacyKeys {
+            guard json == JSON.null else { break }
+            json = self.json[legacyKey]
+        }
+        return DataObject(json: JSON(json.object)).restore(type)
     }
     
-    public func getObjectOptional<T>(_ key: String, type: T.Type) -> T? where T: Storable {
-        let json = self.json[key]
+    public func getObjectOptional<T>(_ key: String, type: T.Type, legacyKeys: [String] = []) -> T? where T: Storable {
+        var json = self.json[key]
+        for legacyKey in legacyKeys {
+            guard json == JSON.null else { break }
+            json = self.json[legacyKey]
+        }
         if json == JSON.null { return nil }
         return DataObject(json: JSON(json.object)).restoreOptional(type)
     }
     
-    public func getObjectArray<T>(_ key: String, type: T.Type) -> [T] where T: Storable {
-        let array = self.json[key].array
-        assert(array != nil, "Failed to restore attribute '\(key)' to object '\(self.objectName)'")
-        return ((array ?? []).map { DataObject(json: $0) }).restoreArray(type)
+    public func getObjectArray<T>(_ key: String, type: T.Type, legacyKeys: [String] = []) -> [T] where T: Storable {
+        var retrieval = self.json[key].array
+        for legacyKey in legacyKeys {
+            guard retrieval == nil else { break }
+            retrieval = self.json[legacyKey].array
+        }
+        assert(retrieval != nil, "Failed to restore attribute '\(key)' to object '\(self.objectName)'")
+        return ((retrieval ?? []).map { DataObject(json: $0) }).restoreArray(type)
     }
     
     // MARK: - String export
@@ -412,8 +498,8 @@ public class DataObject {
     private func parse() -> Storable? {
         if let className = self.json["object"].string {
             var activeClassName = className
-            while Self.legacyClassNames[activeClassName] != nil {
-                activeClassName = Self.legacyClassNames[activeClassName]!
+            while Legacy.newClassNames[activeClassName] != nil {
+                activeClassName = Legacy.newClassNames[activeClassName]!
             }
             let nameSpace = Bundle.main.infoDictionary!["CFBundleExecutable"] as! String
             var type = NSClassFromString("\(nameSpace).\(activeClassName)") as? Storable.Type

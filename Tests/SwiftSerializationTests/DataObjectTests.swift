@@ -21,8 +21,13 @@ final class DataObjectTests: XCTestCase {
     )
     
     override func setUp() async throws {
+        self.databaseTargets.forEach({ _ = $0.clearDatabase() })
         self.student.giveHomework(Homework(answers: "2x + 5", grade: nil))
         self.student.giveHomework(Homework(answers: "Something smart", grade: 99))
+    }
+    
+    override func tearDown() {
+        self.databaseTargets.forEach({ _ = $0.clearDatabase() })
     }
     
     func testSerialization() throws {

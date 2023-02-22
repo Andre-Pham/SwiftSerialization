@@ -113,7 +113,7 @@ class Teacher: Person {
 class Homework: Storable {
     
     public let answers: String
-    public var grade: Int?
+    private(set) var grade: Int?
     
     init(answers: String, grade: Int?) {
         self.answers = answers
@@ -128,14 +128,46 @@ class Homework: Storable {
     }
     
     required init(dataObject: DataObject) {
-        self.answers = dataObject.get(Field.answers.rawValue)
-        self.grade = dataObject.get(Field.grade.rawValue)
+        self.answers = dataObject.get(Field.answers.rawValue, legacyKeys: ["legacyAnswers"])
+        self.grade = dataObject.get(Field.grade.rawValue, legacyKeys: ["legacyGrade"])
     }
     
     func toDataObject() -> DataObject {
         return DataObject(self)
             .add(key: Field.answers.rawValue, value: self.answers)
             .add(key: Field.grade.rawValue, value: self.grade)
+    }
+    
+}
+
+/// This is to test legacy support. It is identical to the Homework class, but with a different class name and attribute names.
+/// Homework has legacy keys added to its init(dataObject: DataObject) so if legacy support is implemented correctly, you should be able to save an instance of LegacyHomework and restore it as Homework.
+class LegacyHomework: Storable {
+    
+    public let legacyAnswers: String
+    private(set) var legacyGrade: Int?
+    
+    init(legacyAnswers: String, legacyGrade: Int?) {
+        self.legacyAnswers = legacyAnswers
+        self.legacyGrade = legacyGrade
+    }
+    
+    // MARK: - Serialization
+    
+    private enum Field: String {
+        case legacyAnswers
+        case legacyGrade
+    }
+    
+    required init(dataObject: DataObject) {
+        self.legacyAnswers = dataObject.get(Field.legacyAnswers.rawValue)
+        self.legacyGrade = dataObject.get(Field.legacyGrade.rawValue)
+    }
+    
+    func toDataObject() -> DataObject {
+        return DataObject(self)
+            .add(key: Field.legacyAnswers.rawValue, value: self.legacyAnswers)
+            .add(key: Field.legacyGrade.rawValue, value: self.legacyGrade)
     }
     
 }

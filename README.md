@@ -13,7 +13,7 @@ Any object that conforms to `Storable` can easily be written to and read from th
 let database: DatabaseTarget = SQLiteDatabase()
 
 // Here's the object we want to read/write.
-let person = Person(name: "Andre", age: 21)
+let person = Person(name: "Andre", height: 188.0)
 
 // Two ways to write to the database. 
 // .write returns the outcome of the transaction (true = success, false = failure)
@@ -202,5 +202,106 @@ self.students = dataObject.getObjectArray(Field.students.rawValue, type: Person.
 
 // In toDataObject() -> DataObject
 .add(key: Field.students.rawValue, value: self.students as [Person])
+```
+
+## Handling Property Addition/Removal
+
+Your classes will change over time.
+
+If you remove properties from your class but have saved it previously, just don't read it from the `DataObject`.
+
+If you have previously saved your objects then later added new properties to their class definition, you define within the class initialiser how the class handles the missing data.
+
+```swift
+private var firstName: String
+
+// ...
+
+// By default, self.firstName will be set to "" if no value is returned
+self.firstName = dataObject.get(Field.firstName.rawValue)
+
+// self.firstName will be set to "MISSING" if no value is returned
+self.firstName = dataObject.get(Field.firstName.rawValue, onFail: "MISSING")
+```
+
+If the property is optional and no value is returned, it will be set to `nil`.
+
+```swift
+private var firstName: String?
+
+// ...
+
+// self.firstName will be set to nil if no value is returned
+self.firstName = dataObject.get(Field.firstName.rawValue)
+```
+
+## Handling Refactoring
+
+You may change the names of your classes and properties. You have to account for these refactors.
+
+Here's how your class may look beforehand:
+
+```swift
+class Person: Storable {
+    
+    private(set) var name: String
+    
+    init(name: String) {
+        self.name = name
+    }
+    
+    // MARK: - Serialization
+    
+    private enum Field: String {
+        case name
+    }
+    
+    required init(dataObject: DataObject) {
+        self.name = dataObject.get(Field.name.rawValue)
+    }
+    
+    func toDataObject() -> DataObject {
+        return DataObject(self)
+            .add(key: Field.name.rawValue, value: self.name)
+    }
+    
+}
+```
+
+If you refactor `name` to `firstName`, and `Person` to `Human`, the result should look as such below. Basically:
+
+* For class name refactors, call `Legacy.addClassRefactor` with the new name.
+* For property name refactors, assuming you change the `Field` case, include the `legacyKeys` parameter in the `.get` method call for that property.
+
+```swift
+// On application startup
+Legacy.addClassRefactor(old: "Person", new: "Human")
+
+// ...
+
+class Human: Storable {
+    
+    private(set) var firstName: String
+    
+    init(firstName: String) {
+        self.firstName = firstName
+    }
+    
+    // MARK: - Serialization
+    
+    private enum Field: String {
+        case firstName
+    }
+    
+    required init(dataObject: DataObject) {
+        self.firstName = dataObject.get(Field.firstName.rawValue, legacyKeys: ["name"])
+    }
+    
+    func toDataObject() -> DataObject {
+        return DataObject(self)
+            .add(key: Field.firstName.rawValue, value: self.firstName)
+    }
+    
+}
 ```
 

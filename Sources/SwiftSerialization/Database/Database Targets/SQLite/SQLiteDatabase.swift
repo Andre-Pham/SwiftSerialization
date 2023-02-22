@@ -74,26 +74,30 @@ public class SQLiteDatabase: DatabaseTarget {
     /// Retrieve all storable objects of a specified type.
     /// - Returns: All saved objects of the specified type
     public func read<T: Storable>() -> [T] {
-        let objectName = String(describing: T.self)
-        let statementString = "SELECT * FROM record WHERE objectName = ?;"
-        var statement: OpaquePointer? = nil
+        let currentObjectName = String(describing: T.self)
+        let legacyObjectNames = Legacy.oldClassNames[currentObjectName]
+        let allObjectNames = (legacyObjectNames ?? [String]()) + [currentObjectName]
         var result = [T]()
-        if sqlite3_prepare_v2(self.database, statementString, -1, &statement, nil) == SQLITE_OK {
-            sqlite3_bind_text(statement, 1, (objectName as NSString).utf8String, -1, nil)
-            while sqlite3_step(statement) == SQLITE_ROW {
-                // These may come in handy later:
-                //let id = String(describing: String(cString: sqlite3_column_text(statement, 0)))
-                //let objectName = String(describing: String(cString: sqlite3_column_text(statement, 1)))
-                //let createdAt = self.dateFormatter.date(from: String(describing: String(cString: sqlite3_column_text(statement, 2)))) ?? Date()
-                let dataString = String(describing: String(cString: sqlite3_column_text(statement, 3)))
-                guard let data = dataString.data(using: .utf8) else {
-                    continue
+        for objectName in allObjectNames {
+            let statementString = "SELECT * FROM record WHERE objectName = ?;"
+            var statement: OpaquePointer? = nil
+            if sqlite3_prepare_v2(self.database, statementString, -1, &statement, nil) == SQLITE_OK {
+                sqlite3_bind_text(statement, 1, (objectName as NSString).utf8String, -1, nil)
+                while sqlite3_step(statement) == SQLITE_ROW {
+                    // These may come in handy later:
+                    //let id = String(describing: String(cString: sqlite3_column_text(statement, 0)))
+                    //let objectName = String(describing: String(cString: sqlite3_column_text(statement, 1)))
+                    //let createdAt = self.dateFormatter.date(from: String(describing: String(cString: sqlite3_column_text(statement, 2)))) ?? Date()
+                    let dataString = String(describing: String(cString: sqlite3_column_text(statement, 3)))
+                    guard let data = dataString.data(using: .utf8) else {
+                        continue
+                    }
+                    let dataObject = DataObject(data: data)
+                    result.append(dataObject.restore(T.self))
                 }
-                let dataObject = DataObject(data: data)
-                result.append(dataObject.restore(T.self))
             }
+            sqlite3_finalize(statement)
         }
-        sqlite3_finalize(statement)
         return result
     }
     
