@@ -1,3 +1,3 @@
 # SwiftSerialization
 
-A description of this package.
+A package used for serializing and restoring Swift objects.

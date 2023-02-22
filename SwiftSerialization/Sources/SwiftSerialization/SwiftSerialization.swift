@@ -1,6 +1,9 @@
-public struct SwiftSerialization {
-    public private(set) var text = "Hello, World!"
 
-    public init() {
+/// Test
+extension String {
+    
+    func printDesc() {
+        print(self)
     }
+    
 }
