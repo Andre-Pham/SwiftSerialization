@@ -7,7 +7,7 @@
 
 import Foundation
 
-class FileDatabase: DatabaseTarget {
+public class FileDatabase: DatabaseTarget {
     
     private let directoryURL = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
     private let metadataFilePath = "metadata"
@@ -28,7 +28,7 @@ class FileDatabase: DatabaseTarget {
     /// - Parameters:
     ///   - record: The record to be written
     /// - Returns: If the write was successful
-    func write<T: Storable>(_ record: Record<T>) -> Bool {
+    public func write<T: Storable>(_ record: Record<T>) -> Bool {
         if self.write(record.data, to: record.metadata.id) {
             let metadataDictionary = self.readMetadataDictionary()
             metadataDictionary.add(record.metadata)
@@ -56,7 +56,7 @@ class FileDatabase: DatabaseTarget {
     
     /// Retrieve all storable objects of a specified type.
     /// - Returns: All saved objects of the specified type
-    func read<T: Storable>() -> [T] {
+    public func read<T: Storable>() -> [T] {
         var result = [T]()
         let objectName = String(describing: T.self)
         let ids = self.readMetadataDictionary().getFilteredIDs({ $0.objectName == objectName })
@@ -73,7 +73,7 @@ class FileDatabase: DatabaseTarget {
     /// - Parameters:
     ///   - id: The id of the stored record
     /// - Returns: The storable object with the matching id
-    func read<T: Storable>(id: String) -> T? {
+    public func read<T: Storable>(id: String) -> T? {
         if let data = try? Data(contentsOf: self.createURL(path: id)) {
             let dataObject = DataObject(data: data)
             return dataObject.restore(T.self)
@@ -85,7 +85,7 @@ class FileDatabase: DatabaseTarget {
     /// - Parameters:
     ///   - allOf: The type to delete
     /// - Returns: The number of records deleted
-    func delete<T: Storable>(_ allOf: T.Type) -> Int {
+    public func delete<T: Storable>(_ allOf: T.Type) -> Int {
         var count = 0
         let objectName = String(describing: T.self)
         let ids = self.readMetadataDictionary().getFilteredIDs({ $0.objectName == objectName })
@@ -111,7 +111,7 @@ class FileDatabase: DatabaseTarget {
     /// - Parameters:
     ///   - id: The id of the stored record to delete
     /// - Returns: If any record was successfully deleted
-    func delete(id: String) -> Bool {
+    public func delete(id: String) -> Bool {
         let url = self.createURL(path: id)
         do {
             try FileManager.default.removeItem(at: url)
@@ -126,7 +126,7 @@ class FileDatabase: DatabaseTarget {
     
     /// Clear the entire database.
     /// - Returns: The number of records deleted (NOT including the MetadataDictionary object)
-    func clearDatabase() -> Int {
+    public func clearDatabase() -> Int {
         var count = 0
         do {
             let directoryContents = try FileManager.default.contentsOfDirectory(
@@ -152,7 +152,7 @@ class FileDatabase: DatabaseTarget {
     
     /// Count the number of records saved.
     /// - Returns: The number of records
-    func count() -> Int {
+    public func count() -> Int {
         var count = 0
         do {
             let directoryContents = try FileManager.default.contentsOfDirectory(

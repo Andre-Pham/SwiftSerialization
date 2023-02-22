@@ -7,12 +7,12 @@
 
 import Foundation
 
-class Record<T: Storable> {
+public class Record<T: Storable> {
     
-    public let metadata: Metadata
-    public let data: T
+    internal let metadata: Metadata
+    internal let data: T
     
-    init(id: String = UUID().uuidString, data: T) {
+    public init(id: String = UUID().uuidString, data: T) {
         self.metadata = Metadata(objectName: data.className, id: id)
         self.data = data
     }

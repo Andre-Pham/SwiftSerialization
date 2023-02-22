@@ -11,13 +11,13 @@ class MetadataDictionary: Storable {
     
     private(set) var metadataDictionary = [String: Metadata]()
     
-    init() { }
+    internal init() { }
     
-    func add(_ metadata: Metadata) {
+    internal func add(_ metadata: Metadata) {
         self.metadataDictionary[metadata.id] = metadata
     }
     
-    func getFilteredIDs(_ condition: (_ metadata: Metadata) -> Bool) -> [String] {
+    internal func getFilteredIDs(_ condition: (_ metadata: Metadata) -> Bool) -> [String] {
         var result = [String]()
         for metadata in self.metadataDictionary.values {
             if condition(metadata) {
@@ -27,7 +27,7 @@ class MetadataDictionary: Storable {
         return result
     }
     
-    func removeIDs(_ ids: [String]) -> Int {
+    internal func removeIDs(_ ids: [String]) -> Int {
         var count = 0
         for id in ids {
             if self.metadataDictionary.removeValue(forKey: id) != nil {
@@ -37,7 +37,7 @@ class MetadataDictionary: Storable {
         return count
     }
     
-    func filterOut(_ condition: (_ value: Metadata) -> Bool) -> Int {
+    internal func filterOut(_ condition: (_ value: Metadata) -> Bool) -> Int {
         var count = 0
         for (id, metadata) in self.metadataDictionary {
             if condition(metadata) {
@@ -54,13 +54,13 @@ class MetadataDictionary: Storable {
         case allMetadata
     }
 
-    required init(dataObject: DataObject) {
+    required internal init(dataObject: DataObject) {
         dataObject.getObjectArray(Field.allMetadata.rawValue, type: Metadata.self).forEach {
             self.add($0)
         }
     }
 
-    func toDataObject() -> DataObject {
+    internal func toDataObject() -> DataObject {
         return DataObject(self)
             .add(key: Field.allMetadata.rawValue, value: Array(self.metadataDictionary.values))
     }

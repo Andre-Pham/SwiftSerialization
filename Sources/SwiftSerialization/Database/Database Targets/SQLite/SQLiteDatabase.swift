@@ -8,7 +8,7 @@
 import Foundation
 import SQLite3
 
-class SQLiteDatabase: DatabaseTarget {
+public class SQLiteDatabase: DatabaseTarget {
     
     /// The directory the sqlite file is saved to
     private let url: URL
@@ -23,7 +23,7 @@ class SQLiteDatabase: DatabaseTarget {
         return result
     }
     
-    init() {
+    public init() {
         self.url = FileManager.default.urls(for: .libraryDirectory, in: .allDomainsMask)[0]
             .appendingPathComponent("records.sqlite")
         guard sqlite3_open(self.url.path, &self.database) == SQLITE_OK else {
@@ -54,7 +54,7 @@ class SQLiteDatabase: DatabaseTarget {
     /// - Parameters:
     ///   - record: The record to be written
     /// - Returns: If the write was successful
-    func write<T: Storable>(_ record: Record<T>) -> Bool {
+    public func write<T: Storable>(_ record: Record<T>) -> Bool {
         let statementString = "REPLACE INTO record (id, objectName, createdAt, data) VALUES (?, ?, ?, ?);"
         var statement: OpaquePointer? = nil
         if sqlite3_prepare_v2(self.database, statementString, -1, &statement, nil) == SQLITE_OK {
@@ -71,7 +71,7 @@ class SQLiteDatabase: DatabaseTarget {
     
     /// Retrieve all storable objects of a specified type.
     /// - Returns: All saved objects of the specified type
-    func read<T: Storable>() -> [T] {
+    public func read<T: Storable>() -> [T] {
         let objectName = String(describing: T.self)
         let statementString = "SELECT * FROM record WHERE objectName = ?;"
         var statement: OpaquePointer? = nil
@@ -99,7 +99,7 @@ class SQLiteDatabase: DatabaseTarget {
     /// - Parameters:
     ///   - id: The id of the stored record
     /// - Returns: The storable object with the matching id
-    func read<T: Storable>(id: String) -> T? {
+    public func read<T: Storable>(id: String) -> T? {
         let statementString = "SELECT * FROM record WHERE id = ?;"
         var statement: OpaquePointer? = nil
         var result: T? = nil
@@ -121,7 +121,7 @@ class SQLiteDatabase: DatabaseTarget {
     /// - Parameters:
     ///   - allOf: The type to delete
     /// - Returns: The number of records deleted
-    func delete<T: Storable>(_ allOf: T.Type) -> Int {
+    public func delete<T: Storable>(_ allOf: T.Type) -> Int {
         var count = 0
         let objectName = String(describing: T.self)
         let statementString = "DELETE FROM record WHERE objectName = ?;"
@@ -141,7 +141,7 @@ class SQLiteDatabase: DatabaseTarget {
     /// - Parameters:
     ///   - id: The id of the stored record to delete
     /// - Returns: If any record was successfully deleted
-    func delete(id: String) -> Bool {
+    public func delete(id: String) -> Bool {
         var successful = false
         let statementString = "DELETE FROM record WHERE id = ?;"
         var statement: OpaquePointer? = nil
@@ -155,7 +155,7 @@ class SQLiteDatabase: DatabaseTarget {
     
     /// Clear the entire database.
     /// - Returns: The number of records deleted
-    func clearDatabase() -> Int {
+    public func clearDatabase() -> Int {
         var countDeleted = 0
         let statementString = "DELETE FROM record;"
         var statement: OpaquePointer? = nil
@@ -171,7 +171,7 @@ class SQLiteDatabase: DatabaseTarget {
     
     /// Count the number of records saved.
     /// - Returns: The number of records
-    func count() -> Int {
+    public func count() -> Int {
         var count = 0
         let statementString = "SELECT COUNT(*) FROM record;"
         var statement: OpaquePointer? = nil

@@ -7,7 +7,7 @@
 
 import Foundation
 
-protocol Storable {
+public protocol Storable {
     
     func toDataObject() -> DataObject
     init(dataObject: DataObject)
@@ -15,7 +15,7 @@ protocol Storable {
 }
 extension Storable {
     
-    var className: String {
+    internal var className: String {
         return String(describing: type(of: self))
     }
     
