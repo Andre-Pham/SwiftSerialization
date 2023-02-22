@@ -416,7 +416,12 @@ public class DataObject {
                 activeClassName = Self.legacyClassNames[activeClassName]!
             }
             let nameSpace = Bundle.main.infoDictionary!["CFBundleExecutable"] as! String
-            guard let type = NSClassFromString("\(nameSpace).\(activeClassName)") as? Storable.Type else {
+            var type = NSClassFromString("\(nameSpace).\(activeClassName)") as? Storable.Type
+            if type == nil {
+                // If the type doesn't exist, we may be looking at the wrong namespace - check package namespace instead
+                type = NSClassFromString("SwiftSerialization.\(activeClassName)") as? Storable.Type
+            }
+            guard let type else {
                 assertionFailure("Class \(nameSpace).\(activeClassName) does not exist but is trying to be restored")
                 return nil
             }

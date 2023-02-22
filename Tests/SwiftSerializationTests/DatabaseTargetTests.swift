@@ -8,12 +8,6 @@
 import XCTest
 @testable import SwiftSerialization
 
-// MARK: - BEFORE RUNNING
-// For running tests in a package environment the namespace has to manually be set - it can't be detected
-// Replace: Bundle.main.infoDictionary!["CFBundleExecutable"] as! String
-// With:    "SwiftSerialization"
-// In:      DataObject.swift
-
 final class DatabaseTargetTests: XCTestCase {
 
     let databaseTargets: [DatabaseTarget] = [SQLiteDatabase(), FileDatabase()]
