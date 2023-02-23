@@ -3,8 +3,6 @@ A package used for serializing and restoring Swift objects.
 
 ## Database Transaction Examples
 
-*For class definitions, refer to **Storable Class Examples**.*
-
 Any object that conforms to `Storable` can easily be written to and read from the database.
 
 ```swift
@@ -55,7 +53,6 @@ class Person: Storable {
     
     private(set) var firstName: String
     private(set) var lastName: String
-    public let id = UUID()
     
     init(firstName: String, lastName: String) {
         self.firstName = firstName
@@ -159,7 +156,7 @@ class Teacher: Person {
 class Homework: Storable {
     
     public let answers: String
-    public var grade: Int?
+    private(set) var grade: Int?
     
     init(answers: String, grade: Int?) {
         self.answers = answers
