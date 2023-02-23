@@ -490,13 +490,11 @@ public class DataObject {
     }
     
     internal func restoreOptional<T>(_ type: T.Type) -> T? where T: Storable {
-        let parse = self.parse() as? T
-        assert(parse != nil, "Object \(type.self) failed to be restored - some class within its inheritance tree likely forgot to add a variable within the toDataObject call")
-        return parse
+        return self.parse() as? T
     }
     
     private func parse() -> Storable? {
-        if let className = self.json["object"].string {
+        if let className = self.json[self.objectField].string {
             var activeClassName = className
             while Legacy.newClassNames[activeClassName] != nil {
                 activeClassName = Legacy.newClassNames[activeClassName]!
