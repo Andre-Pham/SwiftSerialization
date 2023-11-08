@@ -133,28 +133,53 @@ public class SerializationDatabase: DatabaseTarget {
         return result
     }
     
+    /// Retrieve all the record IDs of all objects of a specific type.
+    /// - Parameters:
+    ///   - allOf: The type to retrieve the ids from
+    /// - Returns: All stored record ids of the provided type
+    public func readIDs<T: Storable>(_ allOf: T.Type) -> [String] {
+        let currentObjectName = String(describing: T.self)
+        let legacyObjectNames = Legacy.oldClassNames[currentObjectName]
+        let allObjectNames = (legacyObjectNames ?? [String]()) + [currentObjectName]
+        var result = [String]()
+        for objectName in allObjectNames {
+            let statementString = "SELECT id FROM record WHERE objectName = ?;"
+            var statement: OpaquePointer? = nil
+            if sqlite3_prepare_v2(self.database, statementString, -1, &statement, nil) == SQLITE_OK {
+                sqlite3_bind_text(statement, 1, (objectName as NSString).utf8String, -1, nil)
+                while sqlite3_step(statement) == SQLITE_ROW {
+                    let id = String(describing: String(cString: sqlite3_column_text(statement, 0)))
+                    result.append(id)
+                }
+            }
+            sqlite3_finalize(statement)
+        }
+        return result
+    }
+    
     /// Delete all instances of an object
     /// - Parameters:
     ///   - allOf: The type to delete
     /// - Returns: The number of records deleted
     public func delete<T: Storable>(_ allOf: T.Type) -> Int {
-        var count = 0
-        let objectName = String(describing: T.self)
-        let statementString = "DELETE FROM record WHERE objectName = ?;"
-        var statement: OpaquePointer? = nil
         let countBeforeDelete = self.count()
-        if sqlite3_prepare_v2(self.database, statementString, -1, &statement, nil) == SQLITE_OK {
-            sqlite3_bind_text(statement, 1, (objectName as NSString).utf8String, -1, nil)
-            if sqlite3_step(statement) == SQLITE_DONE {
-                count = countBeforeDelete - self.count()
+        let currentObjectName = String(describing: T.self)
+        let legacyObjectNames = Legacy.oldClassNames[currentObjectName]
+        let allObjectNames = (legacyObjectNames ?? [String]()) + [currentObjectName]
+        for objectName in allObjectNames {
+            let statementString = "DELETE FROM record WHERE objectName = ?;"
+            var statement: OpaquePointer? = nil
+            if sqlite3_prepare_v2(self.database, statementString, -1, &statement, nil) == SQLITE_OK {
+                sqlite3_bind_text(statement, 1, (objectName as NSString).utf8String, -1, nil)
+                sqlite3_step(statement)
+            }
+            if self.transactionActive {
+                sqlite3_reset(statement)
+            } else {
+                sqlite3_finalize(statement)
             }
         }
-        if self.transactionActive {
-            sqlite3_reset(statement)
-        } else {
-            sqlite3_finalize(statement)
-        }
-        return count
+        return countBeforeDelete - self.count()
     }
     
     /// Delete the record with the matching id.
@@ -220,18 +245,22 @@ public class SerializationDatabase: DatabaseTarget {
     /// - Returns: The number of records of the provided type currently saved
     public func count<T: Storable>(_ allOf: T.Type) -> Int {
         var count = 0
-        let objectName = String(describing: T.self)
-        let statementString = "SELECT COUNT(*) FROM record WHERE objectName = ?;;"
-        var statement: OpaquePointer? = nil
-        if sqlite3_prepare(self.database, statementString, -1, &statement, nil) == SQLITE_OK {
-            sqlite3_bind_text(statement, 1, (objectName as NSString).utf8String, -1, nil)
-            if sqlite3_step(statement) == SQLITE_ROW {
-                count = Int(sqlite3_column_int(statement, 0))
-            } else {
-                assertionFailure("Counting records statement could not be executed")
+        let currentObjectName = String(describing: T.self)
+        let legacyObjectNames = Legacy.oldClassNames[currentObjectName]
+        let allObjectNames = (legacyObjectNames ?? [String]()) + [currentObjectName]
+        for objectName in allObjectNames {
+            let statementString = "SELECT COUNT(*) FROM record WHERE objectName = ?;"
+            var statement: OpaquePointer? = nil
+            if sqlite3_prepare(self.database, statementString, -1, &statement, nil) == SQLITE_OK {
+                sqlite3_bind_text(statement, 1, (objectName as NSString).utf8String, -1, nil)
+                if sqlite3_step(statement) == SQLITE_ROW {
+                    count += Int(sqlite3_column_int(statement, 0))
+                } else {
+                    assertionFailure("Counting records statement could not be executed")
+                }
             }
+            sqlite3_finalize(statement)
         }
-        sqlite3_finalize(statement)
         return count
     }
     

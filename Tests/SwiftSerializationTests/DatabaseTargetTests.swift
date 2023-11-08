@@ -65,6 +65,23 @@ final class DatabaseTargetTests: XCTestCase {
         }
     }
     
+    func testReadIDs() throws {
+        for database in self.databaseTargets {
+            print("-- DATABASE \(database.self) --")
+            
+            XCTAssert(database.write(Record(id: "testID1", data: self.student1)))
+            XCTAssert(database.write(Record(id: "testID2", data: self.student2)))
+            XCTAssert(database.write(Record(id: "testID3", data: self.teacher)))
+            let studentIDs = database.readIDs(Student.self)
+            let teacherIDs = database.readIDs(Teacher.self)
+            XCTAssert(studentIDs.contains("testID1"))
+            XCTAssert(studentIDs.contains("testID2"))
+            XCTAssert(studentIDs.count == 2)
+            XCTAssert(teacherIDs.contains("testID3"))
+            XCTAssert(teacherIDs.count == 1)
+        }
+    }
+    
     func testDeleteByObjectType() throws {
         for database in self.databaseTargets {
             print("-- DATABASE \(database.self) --")

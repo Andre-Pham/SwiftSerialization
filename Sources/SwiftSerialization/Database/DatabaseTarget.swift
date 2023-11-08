@@ -25,6 +25,12 @@ public protocol DatabaseTarget {
     /// - Returns: The storable object with the matching id
     func read<T: Storable>(id: String) -> T?
     
+    /// Retrieve all the record IDs of all objects of a specific type.
+    /// - Parameters:
+    ///   - allOf: The type to retrieve the ids from
+    /// - Returns: All stored record ids of the provided type
+    func readIDs<T: Storable>(_ allOf: T.Type) -> [String]
+    
     /// Delete all instances of an object
     /// - Parameters:
     ///   - allOf: The type to delete
