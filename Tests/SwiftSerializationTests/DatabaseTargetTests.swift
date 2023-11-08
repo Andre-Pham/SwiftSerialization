@@ -121,5 +121,18 @@ final class DatabaseTargetTests: XCTestCase {
             XCTAssert(database.count() == 1)
         }
     }
+    
+    func testCount() throws {
+        for database in self.databaseTargets {
+            print("-- DATABASE \(database.self) --")
+            
+            XCTAssert(database.write(Record(data: self.student1)))
+            XCTAssert(database.write(Record(data: self.student2)))
+            XCTAssert(database.write(Record(data: self.teacher)))
+            XCTAssert(database.count() == 3)
+            XCTAssert(database.count(Student.self) == 2)
+            XCTAssert(database.count(Teacher.self) == 1)
+        }
+    }
 
 }

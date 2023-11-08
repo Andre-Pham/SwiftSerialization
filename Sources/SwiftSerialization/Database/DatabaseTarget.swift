@@ -45,6 +45,12 @@ public protocol DatabaseTarget {
     /// - Returns: The number of records
     func count() -> Int
     
+    /// Count the number of records of a certain type saved.
+    /// - Parameters:
+    ///   - allOf: The type to count
+    /// - Returns: The number of records of the provided type currently saved
+    func count<T: Storable>(_ allOf: T.Type) -> Int
+    
     /// Begin a database transaction.
     /// Changes are still made immediately, however to finalise the transaction, `commitTransaction` should be executed.
     /// All changes made during the transaction are cancelled if `rollbackTransaction` is executed.

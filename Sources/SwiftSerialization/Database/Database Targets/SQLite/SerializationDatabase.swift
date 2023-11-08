@@ -214,6 +214,27 @@ public class SerializationDatabase: DatabaseTarget {
         return count
     }
     
+    /// Count the number of records of a certain type saved.
+    /// - Parameters:
+    ///   - allOf: The type to count
+    /// - Returns: The number of records of the provided type currently saved
+    public func count<T: Storable>(_ allOf: T.Type) -> Int {
+        var count = 0
+        let objectName = String(describing: T.self)
+        let statementString = "SELECT COUNT(*) FROM record WHERE objectName = ?;;"
+        var statement: OpaquePointer? = nil
+        if sqlite3_prepare(self.database, statementString, -1, &statement, nil) == SQLITE_OK {
+            sqlite3_bind_text(statement, 1, (objectName as NSString).utf8String, -1, nil)
+            if sqlite3_step(statement) == SQLITE_ROW {
+                count = Int(sqlite3_column_int(statement, 0))
+            } else {
+                assertionFailure("Counting records statement could not be executed")
+            }
+        }
+        sqlite3_finalize(statement)
+        return count
+    }
+    
     /// Begin a database transaction.
     /// Changes are still made immediately, however to finalise the transaction, `commitTransaction` should be executed.
     /// All changes made during the transaction are cancelled if `rollbackTransaction` is executed.
