@@ -9,7 +9,6 @@ import Foundation
 import SQLite3
 
 /// A database target that uses the SQLite3 to save data.
-/// Currently the fastest target.
 public class SerializationDatabase: DatabaseTarget {
     
     /// The directory the sqlite file is saved to
@@ -24,15 +23,22 @@ public class SerializationDatabase: DatabaseTarget {
         result.dateFormat = "yyyy-MM-dd'T'HH:mm:ss.SSSZZZZZ"
         return result
     }
+    /// True if a transaction is ongoing
+    private(set) var transactionActive = false
     
     public init() {
         self.url = FileManager.default.urls(for: .libraryDirectory, in: .allDomainsMask)[0]
             .appendingPathComponent("records.sqlite")
         guard sqlite3_open(self.url.path, &self.database) == SQLITE_OK else {
-            assertionFailure("SQLite database could not be opened")
-            return
+            fatalError("SQLite database could not be opened")
         }
         self.setupTable()
+    }
+    
+    deinit {
+        if self.database != nil {
+            sqlite3_close(self.database)
+        }
     }
     
     private func setupTable() {
@@ -59,16 +65,20 @@ public class SerializationDatabase: DatabaseTarget {
     public func write<T: Storable>(_ record: Record<T>) -> Bool {
         let statementString = "REPLACE INTO record (id, objectName, createdAt, data) VALUES (?, ?, ?, ?);"
         var statement: OpaquePointer? = nil
-        if sqlite3_prepare_v2(self.database, statementString, -1, &statement, nil) == SQLITE_OK {
-            sqlite3_bind_text(statement, 1, (record.metadata.id as NSString).utf8String, -1, nil)
-            sqlite3_bind_text(statement, 2, (record.metadata.objectName as NSString).utf8String, -1, nil)
-            sqlite3_bind_text(statement, 3, (self.dateFormatter.string(from: record.metadata.createdAt) as NSString).utf8String, -1, nil)
-            sqlite3_bind_text(statement, 4, (String(decoding: record.data.toDataObject().rawData, as: UTF8.self) as NSString).utf8String, -1, nil)
-            let outcome = sqlite3_step(statement) == SQLITE_DONE
-            sqlite3_finalize(statement)
-            return outcome
+        guard sqlite3_prepare_v2(self.database, statementString, -1, &statement, nil) == SQLITE_OK else {
+            return false
         }
-        return false
+        sqlite3_bind_text(statement, 1, (record.metadata.id as NSString).utf8String, -1, nil)
+        sqlite3_bind_text(statement, 2, (record.metadata.objectName as NSString).utf8String, -1, nil)
+        sqlite3_bind_text(statement, 3, (self.dateFormatter.string(from: record.metadata.createdAt) as NSString).utf8String, -1, nil)
+        sqlite3_bind_text(statement, 4, (String(decoding: record.data.toDataObject().rawData, as: UTF8.self) as NSString).utf8String, -1, nil)
+        let outcome = sqlite3_step(statement) == SQLITE_DONE
+        if self.transactionActive {
+            sqlite3_reset(statement)
+        } else {
+            sqlite3_finalize(statement)
+        }
+        return outcome
     }
     
     /// Retrieve all storable objects of a specified type.
@@ -139,7 +149,11 @@ public class SerializationDatabase: DatabaseTarget {
                 count = countBeforeDelete - self.count()
             }
         }
-        sqlite3_finalize(statement)
+        if self.transactionActive {
+            sqlite3_reset(statement)
+        } else {
+            sqlite3_finalize(statement)
+        }
         return count
     }
     
@@ -155,7 +169,11 @@ public class SerializationDatabase: DatabaseTarget {
             sqlite3_bind_text(statement, 1, (id as NSString).utf8String, -1, nil)
             successful = sqlite3_step(statement) == SQLITE_DONE
         }
-        sqlite3_finalize(statement)
+        if self.transactionActive {
+            sqlite3_reset(statement)
+        } else {
+            sqlite3_finalize(statement)
+        }
         return successful
     }
     
@@ -171,7 +189,11 @@ public class SerializationDatabase: DatabaseTarget {
                 countDeleted = count
             }
         }
-        sqlite3_finalize(statement)
+        if self.transactionActive {
+            sqlite3_reset(statement)
+        } else {
+            sqlite3_finalize(statement)
+        }
         return countDeleted
     }
     
@@ -190,6 +212,69 @@ public class SerializationDatabase: DatabaseTarget {
         }
         sqlite3_finalize(statement)
         return count
+    }
+    
+    /// Begin a database transaction.
+    /// Changes are still made immediately, however to finalise the transaction, `commitTransaction` should be executed.
+    /// All changes made during the transaction are cancelled if `rollbackTransaction` is executed.
+    /// If a new transaction is started before this one is committed, this transaction's changes are rolled back.
+    /// - Parameters:
+    ///   - override: Override (roll back) the current transaction if one is currently active already - true by default
+    /// - Returns: True if the transaction was successfully started
+    public func startTransaction(override: Bool = true) -> Bool {
+        if self.transactionActive {
+            if !override {
+                // There already exists a transaction, and we can't override it!
+                return false
+            }
+            let rollbackSuccessful = self.rollbackTransaction()
+            if !rollbackSuccessful {
+                return false
+            }
+        }
+        var result = false
+        let beginTransactionString = "BEGIN TRANSACTION;"
+        var statement: OpaquePointer? = nil
+        if sqlite3_prepare_v2(self.database, beginTransactionString, -1, &statement, nil) == SQLITE_OK {
+            result = sqlite3_step(statement) == SQLITE_DONE
+            sqlite3_finalize(statement)
+        }
+        self.transactionActive = result
+        return result
+    }
+    
+    /// Commit the current transaction. All changes made during the transaction are finalised.
+    /// - Returns: True if there was an active transaction and it was committed
+    public func commitTransaction() -> Bool {
+        guard self.transactionActive else {
+            return false
+        }
+        var result = false
+        let commitTransactionString = "COMMIT;"
+        var statement: OpaquePointer? = nil
+        if sqlite3_prepare_v2(self.database, commitTransactionString, -1, &statement, nil) == SQLITE_OK {
+            result = sqlite3_step(statement) == SQLITE_DONE
+            sqlite3_finalize(statement)
+        }
+        self.transactionActive = self.transactionActive ? !result : false
+        return result
+    }
+    
+    /// Rollback the current transaction. All changes made during the transaction are undone.
+    /// - Returns: True if there was an active transaction and it was rolled back
+    public func rollbackTransaction() -> Bool {
+        guard self.transactionActive else {
+            return false
+        }
+        var result = false
+        let rollbackTransactionString = "ROLLBACK;"
+        var statement: OpaquePointer? = nil
+        if sqlite3_prepare_v2(self.database, rollbackTransactionString, -1, &statement, nil) == SQLITE_OK {
+            result = sqlite3_step(statement) == SQLITE_DONE
+            sqlite3_finalize(statement)
+        }
+        self.transactionActive = self.transactionActive ? !result : false
+        return result
     }
     
 }

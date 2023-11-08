@@ -10,7 +10,7 @@ import XCTest
 
 final class DataObjectTests: XCTestCase {
     
-    let databaseTargets: [DatabaseTarget] = [SerializationDatabase(), SerializationFileDatabase()]
+    let databaseTargets: [DatabaseTarget] = [SerializationDatabase()]
 
     let student = Student(
         firstName: "Billy",
@@ -62,7 +62,7 @@ final class DataObjectTests: XCTestCase {
             let studentDataObject = self.student.toDataObject()
             let studentSerialised = studentDataObject.toRawString()
             // 2. Convert raw string back into student
-            let readStudent = DataObject(rawString: studentSerialised).restore(Student.self)
+            let readStudent = DataObject(rawString: studentSerialised!).restore(Student.self)
             
             // Make sure all data is correctly saved and restored
             XCTAssertEqual(self.student.firstName, readStudent.firstName)

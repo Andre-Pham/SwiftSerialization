@@ -21,7 +21,7 @@ public class DataObject {
     /// The JSON this wrapper represents
     private var json = JSON()
     /// The Data representation of this
-    internal var rawData: Data {
+    public var rawData: Data {
         do {
             return try self.json.rawData()
         } catch {
@@ -475,8 +475,8 @@ public class DataObject {
     
     // MARK: - String export
     
-    public func toRawString() -> String {
-        return self.json.rawString()!
+    public func toRawString() -> String? {
+        return self.json.rawString()
     }
     
     // MARK: - Storable export
