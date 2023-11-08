@@ -1,5 +1,5 @@
 //
-//  FileDatabase.swift
+//  SerializationFileDatabase.swift
 //  SwiftSerialization
 //
 //  Created by Andre Pham on 3/1/2023.
@@ -8,8 +8,9 @@
 import Foundation
 
 /// A database target that uses the FileManager to save data. Records are written as files.
-/// The SQLiteDatabase target has approximately 98% faster deletes, 35% faster writes, and about the same read speed. Only use this if you really want to use files.
-public class FileDatabase: DatabaseTarget {
+/// Not compatible with Mac.
+/// The SerializationDatabase target has approximately 98% faster deletes, 35% faster writes, and about the same read speed. Only use this if you really want to use files.
+public class SerializationFileDatabase: DatabaseTarget {
     
     private let directoryURL = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
     private let metadataFilePath = "metadata"

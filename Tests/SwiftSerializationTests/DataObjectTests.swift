@@ -10,7 +10,7 @@ import XCTest
 
 final class DataObjectTests: XCTestCase {
     
-    let databaseTargets: [DatabaseTarget] = [SQLiteDatabase(), FileDatabase()]
+    let databaseTargets: [DatabaseTarget] = [SerializationDatabase(), SerializationFileDatabase()]
 
     let student = Student(
         firstName: "Billy",

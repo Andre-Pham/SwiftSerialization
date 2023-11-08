@@ -1,5 +1,5 @@
 //
-//  SQLiteDatabase.swift
+//  SerializationDatabase.swift
 //  SwiftSerialization
 //
 //  Created by Andre Pham on 5/1/2023.
@@ -10,7 +10,7 @@ import SQLite3
 
 /// A database target that uses the SQLite3 to save data.
 /// Currently the fastest target.
-public class SQLiteDatabase: DatabaseTarget {
+public class SerializationDatabase: DatabaseTarget {
     
     /// The directory the sqlite file is saved to
     private let url: URL
