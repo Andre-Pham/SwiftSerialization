@@ -1,36 +1,83 @@
 # SwiftSerialization
 A package used for serializing and restoring Swift objects.
 
-## Database Transaction Examples
+## Usage Examples
 
 Any object that conforms to `Storable` can easily be written to and read from the database.
 
 ```swift
-// Lets define a database first.
-// Realistically this would be managed at the application level.
-let database: DatabaseTarget = SQLiteDatabase()
+// Lets define a database first
+// Realistically this would be managed at the application level
+let database = SerializationDatabase()
 
-// Here's the object we want to read/write.
+// Here's the object we want to read/write
 let person = Person(name: "Andre", height: 188.0)
+```
 
-// Two ways to write to the database. 
-// .write returns the outcome of the transaction (true = success, false = failure)
-database.write(Record(id: "myID", data: person))
+Writing to the database. Returns `true` on success and `false` on failure.
+
+```swift
+// Writes our person object to the database
+// Generates a random record ID
 database.write(Record(data: person))
 
-// Reading from the database.
-let readPerson: Person? = database.read(id: "myID")
-let readPeople: [Person] = database.read() // Reads all saved Person objects
+// You can also provide your own record ID
+// (Overrides any record with the same ID)
+database.write(Record(id: "myID", data: person))
+```
 
-// Count all records in the database.
+There's three ways to read from the database.
+
+```swift
+// Reads a specific Person object by their record ID
+let readPerson: Person? = database.read(id: "myID")
+
+// Reads all saved Person objects
+let readPeople: [Person] = database.read()
+
+// Reads all saved Person record IDs
+let readPeopleIDs: [String] = database.readIDs(Person.self)
+```
+
+We can count records. If we wish we can specify a specific object type.
+
+```swift
+// Counts all records in the database
 let count = database.count()
 
-// Delete either by id or by type.
-database.delete(id: "myID") // Returns true if any record was deleted
-database.delete(Person.self) // Returns number of records deleted
+// Counts the number of People records
+let peopleCount = database.count(Person.self)
+```
 
-// Or just delete everything.
-database.clearDatabase() // Returns number of records deleted
+We can delete records, or even clear the database.
+
+```swift
+// Delete a record with specific record ID
+// (Returns true if a record was deleted)
+database.delete(id: "myID")
+
+// Delete all Person records
+// (Returns the number of records deleted)
+database.delete(Person.self)
+
+// Delete everything
+// (Returns the number of records deleted)
+database.clearDatabase()
+```
+
+We can also use transactions if we wish. So long as we haven't committed yet, all changes made during a transaction can be rolled back.
+
+```swift
+database.startTransaction()
+let person1Saved = database.write(Record(data: person1))
+let person2Saved = database.write(Record(data: person2))
+if person1Saved && person2Saved {
+    // We can commit the transaction to finalise the changes
+	database.commitTransaction()
+} else {
+    // Or we can rollback to undo all changes made during the transaction
+	database.rollbackTransaction()
+}
 ```
 
 Everything works asyncronously.
@@ -205,9 +252,9 @@ self.students = dataObject.getObjectArray(Field.students.rawValue, type: Person.
 
 Your classes will change over time.
 
-If you remove properties from your class but have saved it previously, just don't read it from the `DataObject`.
+If you remove properties from your class but had saved it previously, just don't read it from the `DataObject`.
 
-If you have previously saved your objects then later added new properties to their class definition, you define within the class initialiser how the class handles the missing data.
+If you had previously saved your objects then later added new properties to their class definition, you define within the class initialiser how the class handles the missing data.
 
 ```swift
 private var firstName: String
@@ -304,3 +351,320 @@ class Human: Storable {
 }
 ```
 
+## `SerializationDatabase` Documentation
+
+#### Initializers
+
+```swift
+init()
+```
+
+#### Instance Methods
+
+```swift
+/// Write a record to the database. If the id already exists, replace it.
+/// - Parameters:
+///   - record: The record to be written
+/// - Returns: If the write was successful
+func write<T: Storable>(_ record: Record<T>) -> Bool
+```
+
+```swift
+/// Retrieve all storable objects of a specified type.
+/// - Returns: All saved objects of the specified type
+func read<T: Storable>() -> [T]
+```
+
+```swift
+/// Retrieve the storable object with the matching id.
+/// - Parameters:
+///   - id: The id of the stored record
+/// - Returns: The storable object with the matching id
+func read<T: Storable>(id: String) -> T?
+```
+
+```swift
+/// Retrieve all the record IDs of all objects of a specific type.
+/// - Parameters:
+///   - allOf: The type to retrieve the ids from
+/// - Returns: All stored record ids of the provided type
+func readIDs<T: Storable>(_ allOf: T.Type) -> [String]
+```
+
+```swift
+/// Delete all instances of an object
+/// - Parameters:
+///   - allOf: The type to delete
+/// - Returns: The number of records deleted
+func delete<T: Storable>(_ allOf: T.Type) -> Int
+```
+
+```swift
+/// Delete the record with the matching id.
+/// - Parameters:
+///   - id: The id of the stored record to delete
+/// - Returns: If any record was successfully deleted
+func delete(id: String) -> Bool
+```
+
+```swift
+/// Clear the entire database.
+/// - Returns: The number of records deleted
+func clearDatabase() -> Int
+```
+
+```swift
+/// Count the number of records saved.
+/// - Returns: The number of records
+func count() -> Int
+```
+
+```swift
+/// Count the number of records of a certain type saved.
+/// - Parameters:
+///   - allOf: The type to count
+/// - Returns: The number of records of the provided type currently saved
+func count<T: Storable>(_ allOf: T.Type) -> Int
+```
+
+```swift
+/// Begin a database transaction.
+/// Changes are still made immediately, however to finalise the transaction, `commitTransaction` should be executed.
+/// All changes made during the transaction are cancelled if `rollbackTransaction` is executed.
+/// If a new transaction is started before this one is committed, this transaction's changes are rolled back.
+/// - Parameters:
+///   - override: Override (roll back) the current transaction if one is currently active already - true by default
+/// - Returns: True if the transaction was successfully started
+func startTransaction(override: Bool) -> Bool
+```
+
+```swift
+/// Commit the current transaction. All changes made during the transaction are finalised.
+/// - Returns: True if there was an active transaction and it was committed
+func commitTransaction() -> Bool
+```
+
+```swift
+/// Rollback the current transaction. All changes made during the transaction are undone.
+/// - Returns: True if there was an active transaction and it was rolled back
+func rollbackTransaction() -> Bool
+```
+
+## `DataObject` Documentation
+
+#### Initializers
+
+```swift
+/// Constructor.
+/// - Parameters:
+///   - object: The Storable object this will represent
+init(_ object: Storable)
+```
+
+```swift
+/// Constructor.
+/// - Parameters:
+///   - rawString: The raw JSON string to populate this with, generated from another DataObject
+init(rawString: String)
+```
+
+#### Instance Properties
+
+```swift
+/// This DataObject's raw data
+var rawData: Data
+```
+
+#### Instance Methods
+
+```swift
+func add(key: String, value: String) -> Self
+```
+
+```swift
+func add(key: String, value: String?) -> Self
+```
+
+```swift
+func add(key: String, value: [String]) -> Self
+```
+
+```swift
+func add(key: String, value: [String?]) -> Self
+```
+
+```swift
+func add(key: String, value: Int) -> Self
+```
+
+```swift
+func add(key: String, value: Int?) -> Self
+```
+
+```swift
+func add(key: String, value: [Int]) -> Self
+```
+
+```swift
+func add(key: String, value: [Int?]) -> Self
+```
+
+```swift
+func add(key: String, value: Double) -> Self
+```
+
+```swift
+func add(key: String, value: Double?) -> Self
+```
+
+```swift
+func add(key: String, value: [Double]) -> Self
+```
+
+```swift
+func add(key: String, value: [Double?]) -> Self
+```
+
+```swift
+func add(key: String, value: Bool) -> Self
+```
+
+```swift
+func add(key: String, value: Bool?) -> Self
+```
+
+```swift
+func add(key: String, value: [Bool]) -> Self
+```
+
+```swift
+func add(key: String, value: [Bool?]) -> Self
+```
+
+```swift
+func add(key: String, value: Date) -> Self
+```
+
+```swift
+func add(key: String, value: Date?) -> Self
+```
+
+```swift
+func add(key: String, value: [Date]) -> Self
+```
+
+```swift
+func add(key: String, value: [Date?]) -> Self
+```
+
+```swift
+func add<T: Storable>(key: String, value: T) -> Self
+```
+
+```swift
+func add<T: Storable>(key: String, value: T?) -> Self
+```
+
+```swift
+func add<T: Storable>(key: String, value: [T]) -> Self
+```
+
+```swift
+func add<T: Storable>(key: String, value: [T?]) -> Self
+```
+
+```swift
+func get(_ key: String, onFail: String = "", legacyKeys: [String] = []) -> String
+```
+
+```swift
+func get(_ key: String, legacyKeys: [String] = []) -> String?
+```
+
+```swift
+func get(_ key: String, legacyKeys: [String] = []) -> [String]
+```
+
+```swift
+func get(_ key: String, legacyKeys: [String] = []) -> [String?]
+```
+
+```swift
+func get(_ key: String, onFail: Int = 0, legacyKeys: [String] = []) -> Int
+```
+
+```swift
+func get(_ key: String, legacyKeys: [String] = []) -> Int?
+```
+
+```swift
+func get(_ key: String, legacyKeys: [String] = []) -> [Int]
+```
+
+```swift
+func get(_ key: String, legacyKeys: [String] = []) -> [Int?]
+```
+
+```swift
+func get(_ key: String, onFail: Double = 0.0, legacyKeys: [String] = []) -> Double
+```
+
+```swift
+func get(_ key: String, legacyKeys: [String] = []) -> Double?
+```
+
+```swift
+func get(_ key: String, legacyKeys: [String] = []) -> [Double]
+```
+
+```swift
+func get(_ key: String, legacyKeys: [String] = []) -> [Double?]
+```
+
+```swift
+func get(_ key: String, onFail: Bool, legacyKeys: [String] = []) -> Bool
+```
+
+```swift
+func get(_ key: String, legacyKeys: [String] = []) -> Bool?
+```
+
+```swift
+func get(_ key: String, legacyKeys: [String] = []) -> [Bool]
+```
+
+```swift
+func get(_ key: String, legacyKeys: [String] = []) -> [Bool?]
+```
+
+```swift
+func get(_ key: String, onFail: Date = Date(), legacyKeys: [String] = []) -> Date
+```
+
+```swift
+func get(_ key: String, legacyKeys: [String] = []) -> Date?
+```
+
+```swift
+func get(_ key: String, legacyKeys: [String] = []) -> [Date]
+```
+
+```swift
+func get(_ key: String, legacyKeys: [String] = []) -> [Date?]
+```
+
+```swift
+func getObject<T>(_ key: String, type: T.Type, legacyKeys: [String] = []) -> T where T: Storable
+```
+
+```swift
+func getObjectOptional<T>(_ key: String, type: T.Type, legacyKeys: [String] = []) -> T? where T: Storable
+```
+
+```swift
+func getObjectArray<T>(_ key: String, type: T.Type, legacyKeys: [String] = []) -> [T] where T: Storable
+```
+
+```swift
+func toRawString() -> String?
+```

@@ -22,7 +22,7 @@ public enum Legacy {
     ///   - new: The new class name
     public static func addClassRefactor(old: String, new: String) {
         Self.newClassNames[old] = new
-        if Self.oldClassNames[new] != nil {
+        if Self.oldClassNames[new] != nil && !(Self.oldClassNames[new]!.contains(old)) {
             Self.oldClassNames[new]!.append(old)
         } else {
             Self.oldClassNames[new] = [old]

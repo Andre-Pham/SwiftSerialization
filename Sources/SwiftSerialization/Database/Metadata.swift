@@ -19,7 +19,7 @@ internal class Metadata: Storable {
         self.createdAt = Date.now
     }
     
-    // MARK: - Serialisation
+    // MARK: - Serialization
 
     private enum Field: String {
         case id

@@ -10,7 +10,7 @@ import XCTest
 
 final class DatabaseTargetTests: XCTestCase {
 
-    let databaseTargets: [DatabaseTarget] = [SQLiteDatabase(), FileDatabase()]
+    let databaseTargets: [DatabaseTarget] = [SerializationDatabase()]
     var student1: Student {
         Student(firstName: "Billy", lastName: "Bob", debt: 100_000.0, teacher: self.teacher, subjectNames: ["Physics", "English"])
     }
@@ -62,6 +62,23 @@ final class DatabaseTargetTests: XCTestCase {
             let readStudent: Student? = database.read(id: "testID")
             XCTAssertNotNil(readStudent)
             XCTAssert(database.count() == 1)
+        }
+    }
+    
+    func testReadIDs() throws {
+        for database in self.databaseTargets {
+            print("-- DATABASE \(database.self) --")
+            
+            XCTAssert(database.write(Record(id: "testID1", data: self.student1)))
+            XCTAssert(database.write(Record(id: "testID2", data: self.student2)))
+            XCTAssert(database.write(Record(id: "testID3", data: self.teacher)))
+            let studentIDs = database.readIDs(Student.self)
+            let teacherIDs = database.readIDs(Teacher.self)
+            XCTAssert(studentIDs.contains("testID1"))
+            XCTAssert(studentIDs.contains("testID2"))
+            XCTAssert(studentIDs.count == 2)
+            XCTAssert(teacherIDs.contains("testID3"))
+            XCTAssert(teacherIDs.count == 1)
         }
     }
     
@@ -119,6 +136,19 @@ final class DatabaseTargetTests: XCTestCase {
             let readStudent: Student? = database.read(id: "student")
             XCTAssertEqual(readStudent?.firstName, self.student2.firstName)
             XCTAssert(database.count() == 1)
+        }
+    }
+    
+    func testCount() throws {
+        for database in self.databaseTargets {
+            print("-- DATABASE \(database.self) --")
+            
+            XCTAssert(database.write(Record(data: self.student1)))
+            XCTAssert(database.write(Record(data: self.student2)))
+            XCTAssert(database.write(Record(data: self.teacher)))
+            XCTAssert(database.count() == 3)
+            XCTAssert(database.count(Student.self) == 2)
+            XCTAssert(database.count(Teacher.self) == 1)
         }
     }
 
