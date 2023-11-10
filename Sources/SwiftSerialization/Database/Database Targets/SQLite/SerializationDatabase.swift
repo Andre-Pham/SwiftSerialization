@@ -62,6 +62,7 @@ public class SerializationDatabase: DatabaseTarget {
     /// - Parameters:
     ///   - record: The record to be written
     /// - Returns: If the write was successful
+    @discardableResult
     public func write<T: Storable>(_ record: Record<T>) -> Bool {
         let statementString = "REPLACE INTO record (id, objectName, createdAt, data) VALUES (?, ?, ?, ?);"
         var statement: OpaquePointer? = nil
@@ -161,6 +162,7 @@ public class SerializationDatabase: DatabaseTarget {
     /// - Parameters:
     ///   - allOf: The type to delete
     /// - Returns: The number of records deleted
+    @discardableResult
     public func delete<T: Storable>(_ allOf: T.Type) -> Int {
         let countBeforeDelete = self.count()
         let currentObjectName = String(describing: T.self)
@@ -186,6 +188,7 @@ public class SerializationDatabase: DatabaseTarget {
     /// - Parameters:
     ///   - id: The id of the stored record to delete
     /// - Returns: If any record was successfully deleted
+    @discardableResult
     public func delete(id: String) -> Bool {
         var successful = false
         let statementString = "DELETE FROM record WHERE id = ?;"
@@ -204,6 +207,7 @@ public class SerializationDatabase: DatabaseTarget {
     
     /// Clear the entire database.
     /// - Returns: The number of records deleted
+    @discardableResult
     public func clearDatabase() -> Int {
         var countDeleted = 0
         let statementString = "DELETE FROM record;"
