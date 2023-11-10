@@ -20,7 +20,7 @@ public class DataObject {
     private(set) var objectName = String()
     /// The JSON this wrapper represents
     private var json = JSON()
-    /// The Data representation of this
+    /// This DataObject's raw data
     public var rawData: Data {
         do {
             return try self.json.rawData()
@@ -39,11 +39,17 @@ public class DataObject {
     
     // MARK: - Initialisers
     
+    /// Constructor.
+    /// - Parameters:
+    ///   - object: The Storable object this will represent
     public init(_ object: Storable) {
         self.add(key: self.objectField, value: object.className)
         self.objectName = object.className
     }
     
+    /// Constructor.
+    /// - Parameters:
+    ///   - rawString: The raw JSON string to populate this with, generated from another DataObject
     public init(rawString: String) {
         self.json = JSON(parseJSON: rawString)
         self.objectName = self.get(self.objectField)
