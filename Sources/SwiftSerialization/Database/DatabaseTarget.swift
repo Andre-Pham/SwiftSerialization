@@ -9,6 +9,9 @@ import Foundation
 
 public protocol DatabaseTarget {
     
+    /// True if a transaction is ongoing
+    var transactionActive: Bool { get }
+    
     /// Write a record to the database. If the id already exists, replace it.
     /// - Parameters:
     ///   - record: The record to be written

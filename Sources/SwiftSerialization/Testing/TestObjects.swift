@@ -7,7 +7,7 @@
 
 import Foundation
 
-class Person: Storable {
+internal class Person: Storable {
     
     private(set) var firstName: String
     private(set) var lastName: String
@@ -38,7 +38,7 @@ class Person: Storable {
     
 }
 
-class Student: Person {
+internal class Student: Person {
     
     private(set) var homework = [Homework]()
     private(set) var debt: Double
@@ -83,7 +83,7 @@ class Student: Person {
     
 }
 
-class Teacher: Person {
+internal class Teacher: Person {
     
     private(set) var salary: Double
     
@@ -110,7 +110,7 @@ class Teacher: Person {
     
 }
 
-class Homework: Storable {
+internal class Homework: Storable {
     
     public let answers: String
     private(set) var grade: Int?
@@ -142,7 +142,7 @@ class Homework: Storable {
 
 /// This is to test legacy support. It is identical to the Homework class, but with a different class name and attribute names.
 /// Homework has legacy keys added to its init(dataObject: DataObject) so if legacy support is implemented correctly, you should be able to save an instance of LegacyHomework and restore it as Homework.
-class LegacyHomework: Storable {
+internal class LegacyHomework: Storable {
     
     public let legacyAnswers: String
     private(set) var legacyGrade: Int?
