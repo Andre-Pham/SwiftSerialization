@@ -26,9 +26,10 @@ public class SerializationDatabase: DatabaseTarget {
     /// True if a transaction is ongoing
     public private(set) var transactionActive = false
     /// The queue of tasks for the database to complete - allows database to be accessed by multiple concurrent threads
-    /// (Ensures every database access is serialized so only one operation can access the database at a time)
+    /// It ensures every database access is serialized so only one operation can access the database at a time
     /// Otherwise database access from multiple concurrent threads can cause the error "illegal multi-threaded access to database connection"
     /// Tip: To ensure no deadlocks, make sure a task added to the queue doesn't start another task
+    /// Tip: If accessing the database is required before starting another operation, both database accesses should be completed within a single sync block, otherwise they can become out of sync (this is accomplished using "internal" denoted methods that execute without being queued so they can be called within sync blocks)
     private let databaseQueue = DispatchQueue(label: "swiftserialization.andrepham")
     
     public init() {
@@ -254,7 +255,7 @@ public class SerializationDatabase: DatabaseTarget {
         }
     }
     
-    /// Count the number of records saved.
+    /// Count the number of records saved. Executed without queuing.
     /// WARNING: Does not operate using the database queue - only execute this within a database queue sync block.
     /// - Returns: The number of records
     private func countInternal() -> Int {
@@ -357,7 +358,7 @@ public class SerializationDatabase: DatabaseTarget {
         }
     }
     
-    /// Rollback the current transaction. All changes made during the transaction are undone.
+    /// Rollback the current transaction. All changes made during the transaction are undone. Executed without queuing.
     /// WARNING: Does not operate using the database queue - only execute this within a database queue sync block.
     /// - Returns: True if there was an active transaction and it was rolled back
     private func rollbackTransactionInternal() -> Bool {
