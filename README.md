@@ -73,14 +73,14 @@ let person1Saved = database.write(Record(data: person1))
 let person2Saved = database.write(Record(data: person2))
 if person1Saved && person2Saved {
     // We can commit the transaction to finalise the changes
-	database.commitTransaction()
+    database.commitTransaction()
 } else {
     // Or we can rollback to undo all changes made during the transaction
-	database.rollbackTransaction()
+    database.rollbackTransaction()
 }
 ```
 
-Everything works asyncronously.
+Everything works asynchronously - even from multiple concurrent threads.
 
 ```swift
 DispatchQueue.global().async {
@@ -357,6 +357,13 @@ class Human: Storable {
 
 ```swift
 init()
+```
+
+#### Instance Properties
+
+```swift
+/// True if a transaction is ongoing
+var transactionActive: Bool
 ```
 
 #### Instance Methods
